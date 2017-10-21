@@ -1,0 +1,117 @@
+@@grammar::Dedalus
+@@comments :: /\(\*.*?\*\)/
+@@eol_comments :: /\/\/.*?$/
+
+
+start = [ includes:includelist ] rules:stmlist $ ;
+
+
+includelist = { @:include ';' } ;
+
+include = 'include' '"' file:filename '"' ;
+
+stmlist = { @:statement ';' }+;
+
+statement
+    = 
+    #| lhs:lhs [ merge:merge ] ':-' rhs:rhs 
+    #| fact:lhs '@' time:int 
+    | rule
+    | fact
+    ;
+
+
+rule = lhs:lhs [ merge:merge ] ':-' rhs:rhs ;
+
+fact = pred:lhs '@' time:int ;
+
+lhs = predicate ;
+
+rhs = subgoallist ;
+
+
+predicate = table:catalog_entry '(' args:exprlist ')' ;
+
+name = /\w+/;
+catalog_entry = /[\w_-]+/ ;
+
+
+subgoallist
+    =
+    ','%{@:subgoal}+
+    ;
+
+subgoal
+    =
+    | notin 
+    | rhspredicate
+    | qual
+    | assignment
+    ;
+
+rhspredicate = predicate ; 
+
+qual = left:var qop:qualop right:expr ;
+
+assignment = var:var '=' expr:expr ;
+
+notin = 'notin' pred:rhspredicate ;
+
+exprlist = ','%{ @:expr }+ ;
+
+expr 
+    =
+    | func '(' expr ')'
+    | '(' lexp:expr op:op rexp:var ')'
+    | lexp:expr op:op rexp:var
+    | lexp:var op:op rexp:expr
+    | var
+    | const
+    | dontcare
+    # N.B. doesn't typecheck except in the head
+    | aggregate
+    ;
+
+op
+    =
+    | '+'
+    | '-'
+    | '*'
+    | '/'
+    ;
+
+qualop
+    =
+    | '=='
+    | '<'
+    | '>'
+    | '<='
+    | '>='
+    | '!='
+    ;
+
+var = /[A-Z]\w*/ ;
+
+aggregate = func '<' var '>' ;
+
+dontcare = "_" ;
+
+func = /[\w_-]+/ ;
+
+filename = /[a-zA-Z.-_0-9\/\\]+/ ; 
+
+const 
+    = 
+    | int
+    | /\'[^']+\'/
+    | /\"[^"]+\"/
+    ;
+
+int = /[0-9]+/ ;
+
+merge 
+    = 
+    | '@next'
+    | '@async'
+    ;
+
