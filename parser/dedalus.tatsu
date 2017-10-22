@@ -4,43 +4,28 @@
 
 
 start = [ includes:includelist ] rules:stmlist $ ;
-
-
 includelist = { @:include ';' } ;
-
 include = 'include' '"' file:filename '"' ;
-
 stmlist = { @:statement ';' }+;
 
 statement
     = 
-    #| lhs:lhs [ merge:merge ] ':-' rhs:rhs 
-    #| fact:lhs '@' time:int 
     | rule
     | fact
     ;
 
-
 rule = lhs:lhs [ merge:merge ] ':-' rhs:rhs ;
-
 fact = pred:lhs '@' time:int ;
-
 lhs = predicate ;
-
 rhs = subgoallist ;
-
-
 predicate = table:catalog_entry '(' args:exprlist ')' ;
-
 name = /\w+/;
 catalog_entry = /[\w_-]+/ ;
 
-
 subgoallist
     =
-    ','%{@:subgoal}+
+    ','.{ subgoal }+
     ;
-
 subgoal
     =
     | notin 
@@ -50,13 +35,9 @@ subgoal
     ;
 
 rhspredicate = predicate ; 
-
 qual = left:var qop:qualop right:expr ;
-
 assignment = var:var '=' expr:expr ;
-
 notin = 'notin' pred:rhspredicate ;
-
 exprlist = ','%{ @:expr }+ ;
 
 expr 
@@ -91,13 +72,9 @@ qualop
     ;
 
 var = /[A-Z]\w*/ ;
-
 aggregate = func '<' var '>' ;
-
 dontcare = "_" ;
-
 func = /[\w_-]+/ ;
-
 filename = /[a-zA-Z.-_0-9\/\\]+/ ; 
 
 const 

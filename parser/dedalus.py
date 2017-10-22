@@ -72,7 +72,16 @@ class TrivialSemantics(object):
 
 class DedalusSemantics(TrivialSemantics):
 
-    def predicate(self, ast):
+    def Nlhs(self, ast):
+        print "IN LHS " + str(ast)
+        if type(ast.args) == str:
+            args = ast.args
+        else:
+            args = ", ".join(ast.args)
+    
+        return ast.table +  '(' + args + ', NewTime)'
+
+    def Nrhspredicate(self, ast):
         if type(ast.args) == str:
             args = ast.args
         else:
@@ -80,15 +89,53 @@ class DedalusSemantics(TrivialSemantics):
     
         return ast.table +  '(' + args + ', Time)'
 
+
+    def predicate(self, ast):
+        return ast;
+        #pass;
+    
+
+    def check_rhs(self, ast):
+        # check a couple of well-formedness conditions for dedalus rules.
+        print "TYPE of rhs is "  + str(type(ast))
+        running = None
+        for subg in ast:
+            print "SUBG is " + str(subg)
+            if running is None:
+                running = subg.first
+            if subg.first != running:
+                raise Exception("Local knowledge - " + subg.first + " vs " + running)
+
+        
+
+
     def rule(self, ast):
         print "AST is " + str(ast)
+        self.check_rhs(ast.rhs)
+        print "OK "  + str(ast.rhs[0])
+        node_id = ast.rhs[0].args[0]
+
+        print "NODE id " + node_id
 
         lhs = ast.lhs + (ast.merge or "")
+        # 'type' check
+        running = None
+        for subg in ast.rhs:
+            if running is None:
+                running = subg.first
+            if subg.first != running:
+                raise Exception("Local knowledge - " + subg.first + " vs " + running)
+
+        
+
         if type(ast.rhs) == unicode:
             rhs = ast.rhs
+            node = ast.rhs.first
         else:
             print "JOIN ME " + str(ast.rhs)
             rhs = ", ".join(ast.rhs)
+
+        
 
         return lhs + " :- " + rhs + ";"
 
