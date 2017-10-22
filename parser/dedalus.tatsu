@@ -37,7 +37,7 @@ subgoal
 rhspredicate = predicate ; 
 qual = left:var qop:qualop right:expr ;
 assignment = var:var '=' expr:expr ;
-notin = 'notin' pred:rhspredicate ;
+notin = notin:'notin' pred:rhspredicate ;
 exprlist = ','%{ @:expr }+ ;
 
 expr 

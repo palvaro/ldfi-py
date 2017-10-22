@@ -12,7 +12,8 @@ parser = tatsu.compile(grammar)
 
 
 with open(sys.argv[1], 'r') as prog:
-    ast = parser.parse(prog.read(), trace=False, colorize=True, semantics=TrivialSemantics())
+    ast = parser.parse(prog.read(), trace=False, colorize=True, semantics=DedalusSemantics())
+    print ast
     
 
 

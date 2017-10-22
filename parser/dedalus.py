@@ -2,9 +2,11 @@ import tatsu
 from tatsu.ast import AST
 from tatsu.walkers import NodeWalker
 from pprint import pprint
+import os
 
 
 class TrivialSemantics(object):
+    # recognize a dedalus program, and transform it into the same program yay
     def mergeit(self, merge):
         if merge is None:
             return ''
@@ -71,71 +73,65 @@ class TrivialSemantics(object):
 
 
 class DedalusSemantics(TrivialSemantics):
-
-    def Nlhs(self, ast):
-        print "IN LHS " + str(ast)
-        if type(ast.args) == str:
-            args = ast.args
-        else:
-            args = ", ".join(ast.args)
-    
-        return ast.table +  '(' + args + ', NewTime)'
-
-    def Nrhspredicate(self, ast):
-        if type(ast.args) == str:
-            args = ast.args
-        else:
-            args = ", ".join(ast.args)
-    
-        return ast.table +  '(' + args + ', Time)'
-
+    # Translate a dedalus program into a c4lang program, yay
 
     def predicate(self, ast):
         return ast;
-        #pass;
-    
+
+    def include(self, ast):
+        return ""
+        # the 'semantics' of the include statement are to parse, then hoist the program referred to into this program.
+        print "CWD " + str(os.getcwd())
+        grammar = open('dedalus.tatsu').read()
+        prog = open(ast.file).read()
+        parser = tatsu.compile(grammar)
+        ast = parser.parse(prog.read(), trace=False, colorize=True, semantics=DedalusSemantics())
+        return ast
+        
+        
 
     def check_rhs(self, ast):
         # check a couple of well-formedness conditions for dedalus rules.
-        print "TYPE of rhs is "  + str(type(ast))
         running = None
         for subg in ast:
-            print "SUBG is " + str(subg)
-            if running is None:
-                running = subg.first
-            if subg.first != running:
-                raise Exception("Local knowledge - " + subg.first + " vs " + running)
+            # if the subgoal is a notin, we have already parsed it and don't need to check it now
+            # GET RID OF ME!!!
+            if type(subg) != unicode:
+                if running is None:
+                    running = subg.first
+                if subg.first != running:
+                    raise Exception("Local knowledge - " + subg.first + " vs " + running)
 
-        
+    def tableify(self, ast, timevar):
+        print "TABLEIFY " + str(ast)
 
+        # grrr, this is annoying
+        if u'pred' in ast:
+            return ((ast.notin + " ") or "") + ast.pred.table + '(' + ", ".join(ast.pred.args + [timevar]) + ')'
+        else:
+            return ast.table + '(' + ", ".join(ast.args + [timevar]) + ')'
+
+    def notin(self,ast):
+        return ast
+
+    def fact(self, ast):
+        print "FACT " +  str(ast)
+        #return ast.pred + "@" + ast.time + ";"
+        return self.tableify(ast.pred, ast.time)
 
     def rule(self, ast):
-        print "AST is " + str(ast)
         self.check_rhs(ast.rhs)
-        print "OK "  + str(ast.rhs[0])
         node_id = ast.rhs[0].args[0]
 
-        print "NODE id " + node_id
-
-        lhs = ast.lhs + (ast.merge or "")
-        # 'type' check
-        running = None
-        for subg in ast.rhs:
-            if running is None:
-                running = subg.first
-            if subg.first != running:
-                raise Exception("Local knowledge - " + subg.first + " vs " + running)
-
-        
-
-        if type(ast.rhs) == unicode:
-            rhs = ast.rhs
-            node = ast.rhs.first
+        lhs = self.tableify(ast.lhs, "NewTime")
+        rhs = ", ".join(map(lambda x : self.tableify(x, "Time"), ast.rhs))
+        if ast.merge == "@next":
+            clock = ', localclock(' + node_id  + ", Time, NewTime)"
+        elif ast.merge == "@async":
+            other_id = ast.lhs.args[0]
+            clock = ', clock(' + ", ".join([node_id, other_id])  + ", Time, NewTime)"
         else:
-            print "JOIN ME " + str(ast.rhs)
-            rhs = ", ".join(ast.rhs)
-
+            clock = ''
         
-
-        return lhs + " :- " + rhs + ";"
+        return lhs + " :- " + rhs + clock + ";"
 

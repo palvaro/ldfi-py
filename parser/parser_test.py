@@ -23,8 +23,6 @@ class GrammarTest(unittest.TestCase):
         ast = self.parser.parse(prog, trace=False, colorize=True, semantics=TrivialSemantics())
         self.assertEqual(str(ast), prog)
 
-
-    # this test is failing
     def test_simple3(self):
         prog = 'log(Node, Pload)@next :- log(Node, Pload), notin frog(Node);'
         ast = self.parser.parse(prog, trace=False, colorize=True, semantics=TrivialSemantics())
