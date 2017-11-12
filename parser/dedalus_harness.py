@@ -3,17 +3,24 @@ from tatsu.ast import AST
 from tatsu.walkers import NodeWalker
 from pprint import pprint
 import unittest
-from dedalus import DedalusSemantics, TrivialSemantics
+from dedalus_parser import DedalusParser
 import sys
+import os
 
 
-grammar = open('dedalus.tatsu').read()
-parser = tatsu.compile(grammar)
+grammar = open('dedalus_asmodel.tatsu').read()
+parser = tatsu.compile(grammar, asmodel = True)
 
 
-with open(sys.argv[1], 'r') as prog:
-    ast = parser.parse(prog.read(), trace=False, colorize=True, semantics=DedalusSemantics())
-    print ast
+dp = DedalusParser()
+prog = dp.expand_file(sys.argv[1])
+
+print "POGO " + prog
+w = dp.parse(prog)
+pfx = os.path.basename(sys.argv[1])
+w.to_dot().render(pfx + "_dataflow")
+
+
     
 
 

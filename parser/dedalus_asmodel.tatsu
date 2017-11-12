@@ -1,0 +1,101 @@
+@@grammar::Dedalus
+@@comments :: /\(\*.*?\*\)/
+@@eol_comments :: /\/\/.*?$/
+
+
+start::program = [ includes:includelist ] rules:stmlist $ ;
+includelist::includelist = includelist:{ @:include ';' } ;
+include::include = 'include' '"' file:filename '"' ;
+stmlist::stmlist =  stmts:{statement ';' }+ ;
+
+
+statement::statement
+    = stmt:(
+    | rule
+    | fact
+    );
+
+rule::rule = lhs:lhs [ merge:merge ] ':-' rhs:rhs ;
+#fact::fact = pred:lhs '@' time:int ;
+fact::fact = predicate ;
+lhs::lhs = predicate:predicate ;
+rhs::rhs = rhs:subgoallist ;
+predicate::predicate = table:catalog_entry '(' args:exprlist ')' [ '@' time:int ];
+name::String = /\w+/;
+catalog_entry::catalog_entry = entry:/[\w_-]+/ ;
+
+subgoallist::subgoallist
+    = (
+    ','.{ subgoals:subgoal }+
+    );
+
+
+subgoal::subgoal
+    = subgoal:(
+    | notin 
+    | rhspredicate
+    | qual
+    | assignment
+    )
+    ;
+
+rhspredicate::rhspredicate = pred:predicate ; 
+qual::qual = left:var qop:qualop right:expr ;
+assignment::assignment = var:var '=' expr:expr ;
+notin::notin = notin:'notin' pred:rhspredicate ;
+exprlist::exprlist = (','%{ exprs:expr }+) ;
+
+expr::expr 
+    = expr:(
+    | func '(' expr ')'
+    | '(' lexp:expr op:op rexp:var ')'
+    | lexp:expr op:op rexp:var
+    | lexp:var op:op rexp:expr
+    | var
+    | const
+    | dontcare
+    # N.B. doesn't typecheck except in the head
+    | aggregate
+    )
+    ;
+
+op
+    = op:(
+    | '+'
+    | '-'
+    | '*'
+    | '/'
+    );
+
+qualop
+    = op:(
+    | '=='
+    | '<'
+    | '>'
+    | '<='
+    | '>='
+    | '!='
+    );
+
+var::var = val:/[A-Z]\w*/ ;
+aggregate::aggregate = func:func '<' var:var '>' ;
+dontcare::dontcare = "_" ;
+func::func = /[\w_-]+/ ;
+filename::filename = /[a-zA-Z.-_0-9\/\\]+/ ; 
+
+const::const 
+    = const:(
+    | int
+    | /\'[^']+\'/
+    | /\"[^"]+\"/
+    )
+    ;
+
+int::int = /[0-9]+/ ;
+
+merge::merge 
+    = merge:(
+    | '@next'
+    | '@async'
+    );
+
