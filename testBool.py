@@ -9,7 +9,8 @@ class MyTest(unittest2.TestCase):
     def basic(self):
         return pbool.OrFormula(pbool.AndFormula(pbool.Literal("a"), pbool.Literal("b")), pbool.AndFormula(pbool.Literal("c"), pbool.Literal("d")))
 
-   
+    def bare_disj(self):
+        return pbool.OrFormula(pbool.Literal("A"), pbool.OrFormula(pbool.Literal("B"), pbool.OrFormula(pbool.Literal("C"), pbool.Literal("D"))))
 
     def test_size(self):
         fg = pbool.FormulaGenerator(10, 8)
@@ -44,14 +45,15 @@ class MyTest(unittest2.TestCase):
         assert(cnf.isCNF())
         c = cnf.conjuncts()
 
-    def test_solve(self):
+    def Ntest_solve(self):
         fg = pbool.FormulaGenerator(50, 8)
         fst = fg.formula(4)
-        s = psat.Solver(fst)
+        cnf = pbool.CNFFormula(fst)
+        s = psat.Solver(cnf)
         for soln in  s.minimal_solutions():
-            print "SOLN " + str(soln)
+            print "SOLN1 " + str(soln)
 
-    def test_basic_solve(self):
+    def Ntest_basic_solve(self):
         base = self.basic()
         cnf = pbool.CNFFormula(base)
         s = psat.Solver(cnf)
@@ -59,7 +61,7 @@ class MyTest(unittest2.TestCase):
             print "SOLN " + str(soln)
 
 
-    def test_basic_ilp(self):
+    def Ntest_basic_ilp(self):
         base = self.basic()
         cnf = pbool.CNFFormula(base)
         s = pilp.Solver(cnf)
@@ -67,7 +69,17 @@ class MyTest(unittest2.TestCase):
         for soln in s.solutions():
             print "SOL: "  + str(soln)
 
-    def Ntest_big_ilp(self):
+    def test_disj(self):
+        disj = self.bare_disj()
+        assert(disj.clauses() == 7)
+        cnf = pbool.CNFFormula(disj)
+        assert(len(cnf.conjuncts()) == 1)
+        s = pilp.Solver(cnf)
+        assert(len(list(s.solutions())) == 15)
+
+
+
+    def NNNtest_big_ilp(self):
         fg = pbool.FormulaGenerator(100, 8)
         fst = fg.formula(8)
         cnf = pbool.CNFFormula(fst)
@@ -81,7 +93,6 @@ class MyTest(unittest2.TestCase):
         fg = pbool.FormulaGenerator(20, 8)
         fst = fg.formula(4)
 
-        #print "FORMO: " + str(fst)
 
         cnf = pbool.CNFFormula(fst)
 
@@ -96,3 +107,5 @@ class MyTest(unittest2.TestCase):
 
         #assert(ssols == isols)
 
+if __name__ == '__main__':
+    unittest2.main()

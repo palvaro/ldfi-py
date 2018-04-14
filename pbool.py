@@ -114,32 +114,23 @@ class AndFormula(BooleanFormula):
         return self.left.isCNF() and self.right.isCNF()
 
     def disjuncts(self):
+        # P.A.A. ????
         print "FOOGAR"
         return set()
 
     def conjuncts(self):
         # an AND node should return a set of sets of disjuncts
-        #return self.left.conjuncts().union(self.right.conjuncts())
-
         ret = set()
-        #ret = []
         if self.left.sign == "OR":
             ret.add(frozenset(self.left.disjuncts()))
-            #ret.append(self.left.disjuncts())
         else:
-            #ret.extend(self.left.conjuncts())
             ret = ret.union(self.left.conjuncts())
 
         if self.right.sign == "OR":
-            #ret.append(self.right.disjuncts())
             ret.add(frozenset(self.right.disjuncts()))
         else:
-            #ret.extend(self.right.conjuncts())
             ret = ret.union(self.right.conjuncts())
 
-        
-
-        #self.left.conjuncts().union(self.right.conjuncts())
         return ret
            
         
@@ -174,7 +165,7 @@ class OrFormula(BooleanFormula):
 
     def conjuncts(self):
         # vacuous case!
-        return frozenset(self.left.disjuncts().union(self.right.disjuncts()))
+        return frozenset([frozenset(self.left.disjuncts().union(self.right.disjuncts()))])
 
 class Literal(BooleanFormula):
     def __init__(self, val):
@@ -238,23 +229,6 @@ class CNFFormula:
     def conjuncts(self):
         return self.formula.conjuncts()            
 
+    def __str__(self):
+        return self.formula.__str__()
 
-r = Literal("foo")
-l = Literal("bar")
-
-t = AndFormula(l, r)
-
-o = OrFormula(t, t)
-
-s = AndFormula(o, t)
-
-
-
-#print str(s)
-
-
-
-#fg = FormulaGenerator(10, 27)
-#f = fg.formula(40)
-
-#print str(f)
