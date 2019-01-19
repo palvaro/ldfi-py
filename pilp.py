@@ -1,5 +1,9 @@
+import math
 import pbool
 from pulp import *
+
+
+default_prob = 0.5
 
 
 class SATVars:
@@ -59,3 +63,26 @@ class Solver:
             yield ret
             self.problem += (newsum <= len(list(self.vars.allVars())) - 1)
 
+class ProbSolver(Solver):
+    def __init__(self, cnf, likelihoods):
+    #Solver.__init__(cnf)
+        self.likelihoods = likelihoods
+    # get rid of this repetition.
+        self.problem = LpProblem("LDFI", LpMaximize)
+
+        self.vars = SATVars()
+        self.satformula = []
+        for clause in cnf.conjuncts():
+            satclause = list(map(self.vars.lookupName, clause))
+            #print "SATCLAUSE " + str(satclause)
+            self.satformula.append(list(satclause))
+            constraint = sum(satclause) >= 1
+            self.problem += constraint
+
+        #for v in self.vars.allVars():
+        #    fixed_up = str(v).replace("_", "-")
+        #    lk = self.likelihoods.get(fixed_up, -1)
+        #    print("FIXED " + fixed_up + ", lk " + str(lk))
+
+        # maximize the sum of the log ofthe probabilities of thevars!
+        self.problem += sum(list(map(lambda x: math.log(self.likelihoods.get(str(x).replace("_", "-"), default_prob), 2) * x, self.vars.allVars())))

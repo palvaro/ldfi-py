@@ -107,5 +107,27 @@ class MyTest(unittest2.TestCase):
 
         #assert(ssols == isols)
 
+    def test_prob(self):
+        fg = pbool.FormulaGenerator(20, 8)
+        fst = fg.formula(4)
+
+
+        cnf = pbool.CNFFormula(fst)
+        i = pilp.Solver(cnf)
+        p = pilp.ProbSolver(cnf, {})
+
+
+        isols = list(i.solutions())
+        psols = list(p.solutions())
+
+
+        print("SOL1 " + str(isols))
+        print("SOL2 " + str(psols))
+        assert(isols == psols)
+        p2 = pilp.ProbSolver(cnf, {"I2":0.0001, "I9":0.000001, "I4":0.000000000001})
+        p2sols = list(p2.solutions())
+        print("SOL3 " + str(p2sols))
+
+
 if __name__ == '__main__':
     unittest2.main()
