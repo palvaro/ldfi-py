@@ -56,6 +56,7 @@ class RuleGoalGraph(object):
         self.rules = []
 
     def get_goal(self, goal):
+        print "GOAL is " + str(goal)
         if goal.predicate in self.goals:
             return self.goals[goal.predicate]
         else:
@@ -111,6 +112,8 @@ class RuleGoalGraph(object):
         
             
         return graph
+
+
         
 
 class NegNodeWalker(NodeWalker):
@@ -147,14 +150,20 @@ class NegNodeWalker(NodeWalker):
 
     def walk_rule(self, node):
         lhs = self.walk(node.lhs)
-        rhs = self.walk(node.rhs)
-        if "merge" in dir(node):
-            merge = self.walk(node.merge)
-        else:
-            merge = None
 
-        rule = RuleNode(lhs, merge)
+        print "LHS is  " + str(lhs)
+        rhs = self.walk(node.rhs)
+
+        #if "merge" in dir(node):
+        #    merge = self.walk(node.merge)
+        #else:
+        #    merge = None
+
+        #rule = RuleNode(lhs, merge)
+
+        rule = lhs
         for s in rhs:
+            print "ADDING GOAL " + str(s)
             rule.add_goal(s)
 
         return rule
@@ -163,8 +172,16 @@ class NegNodeWalker(NodeWalker):
     def walk_rhs(self, node):
         return self.walk(node.rhs)
 
-    def walk_lhs(self, node):
-        return self.walk(node.predicate)
+    def walk_plainlhs(self, node):
+        print "U"
+        return RuleNode(self.walk(node.predicate), None)
+
+    def walk_inductivelhs(self, node):
+        print "UM"
+        return RuleNode(self.walk(node.predicate), "@next")
+
+    def walk_asynclhs(self, node):
+        return RuleNode(self.walk(node.predicate), "@async")
 
     def walk_subgoallist(self, node):
         if isinstance(node.subgoals, list):
@@ -216,7 +233,7 @@ class NegNodeWalker(NodeWalker):
     # Here to check if a node being used hasn't been defined yet.
     def walk_Node(self, node):
         print "node undefined"
-        #print node
+        print node
         return ""
 
 class DedalusParser(object):

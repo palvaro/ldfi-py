@@ -7,7 +7,7 @@ import unittest
 from dedalus import TrivialSemantics, DedalusSemantics
 from codegen import C4CodeGenerator
 
-from negprov import NegNodeWalker
+from dedalus_parser import NegNodeWalker
 
 
 class GrammarTest(unittest.TestCase):

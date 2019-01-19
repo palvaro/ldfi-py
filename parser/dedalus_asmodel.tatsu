@@ -6,7 +6,7 @@
 start::program = [ includes:includelist ] rules:stmlist $ ;
 includelist::includelist = includelist:{ @:include ';' } ;
 include::include = 'include' '"' file:filename '"' ;
-stmlist::stmlist =  stmts:{statement ';' }+ ;
+stmlist::stmlist =  stmts:{stm:statement ';' }+ ;
 
 
 statement::statement
@@ -15,10 +15,24 @@ statement::statement
     | fact
     );
 
-rule::rule = lhs:lhs [ merge:merge ] ':-' rhs:rhs ;
+#rule::rule = lhs:lhs [ merge:merge ] ':-' rhs:rhs ;
+rule::rule 
+    = rule:(
+    | lhs:inductivelhs ':-' rhs:rhs
+    | lhs:asynclhs ':-' rhs:rhs
+    | lhs:plainlhs  ':-' rhs:rhs
+    )
+    ;
+
+inductivelhs::inductivelhs = predicate:predicate mnext ;
+asynclhs::asynclhs = predicate:predicate masync ;
+plainlhs::plainlhs = predicate:predicate ;
+
+
+
 #fact::fact = pred:lhs '@' time:int ;
 fact::fact = predicate ;
-lhs::lhs = predicate:predicate ;
+#lhs::lhs = predicate:predicate ;
 rhs::rhs = rhs:subgoallist ;
 predicate::predicate = table:catalog_entry '(' args:exprlist ')' [ '@' time:int ];
 name::String = /\w+/;
@@ -92,6 +106,9 @@ const::const
     ;
 
 int::int = /[0-9]+/ ;
+
+mnext::mnext = '@next' ;
+masync::masync = '@async' ;
 
 merge::merge 
     = merge:(
